@@ -5,15 +5,29 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 
 import Modal from 'react-bootstrap/Modal';
-import { Row } from 'react-bootstrap';
+import { ListGroup, Row } from 'react-bootstrap';
 
 const Tableclienti = () => {
   const [responseText, setResponseText] = useState([]);
   const [show, setShow] = useState(false);
-
+  const [comuni,setComuni] = useState();
+  const [selectOption,setSelectOption]=useState();
+  const [selectOption2,setSelectOption2]=useState();
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+
+  const [show2, setShow2] = useState(false);
+  const handleClose2 = () => {
+    setShow2(false);
+    setShow(true);
+  }
+  const handleShow2 = () =>{ 
+    setShow2(true);
+    setShow(false);
+  }
+
+
   const [formState, setFormState] = useState({
     cognomeContatto: '',
     dataInserimento: '',
@@ -60,15 +74,36 @@ const Tableclienti = () => {
     },
     listafatture: [],
   });
+  //ciao.franco.salve
+  //ciao
+  //franco
+  //salve
+const handleChange = (event) => {
+  const { name, value } = event.target;
+  if (name.includes('.')) {
+    const keys = name.split('.');
+    setFormState((prevData) => {
+      let updatedData = { ...prevData };
+      let nestedObject = updatedData;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    
-    setFormState((prevState) => ({
-      ...prevState,
-      [name]: value,
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!nestedObject[keys[i]]) {
+          nestedObject[keys[i]] = {};
+        }
+        nestedObject = nestedObject[keys[i]];
+      }
+
+      nestedObject[keys[keys.length - 1]] = value;
+
+      return updatedData;
+    });
+  } else {
+    setFormState((prevData) => ({
+      ...prevData,
+      [name]: value
     }));
-  };
+  }
+};
 
   const handleSubmit = (e) => {
 if(formState.id){
@@ -79,6 +114,19 @@ if(formState.id){
 }
 
   }
+
+    const handleSelect = (event) => {
+    setSelectOption(event.target.value);
+      formState.indirizzoSedeLegale.comune.id=event.target.value;
+  };
+
+    const handleSelect2 = (event) => {
+    setSelectOption2(event.target.value);
+      formState.indirizzoSedeOperativa.comune.id=event.target.value;
+  };
+
+
+
 const ADD  = async()=>{
     try {
         const response = await fetch(`http://localhost:8080/api/cliente`, {
@@ -132,8 +180,24 @@ const ADD  = async()=>{
 
 
 
+  const fetchComuni = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/comune/all", {
+        method: "GET",
+      });
 
-
+      if (response.ok) {
+        const data = await response.json();
+        setComuni(data);
+      } else {
+        console.log("Si è verificato un errore nella richiesta");
+        alert("Qualcosa è andato storto");
+      }
+    } catch (error) {
+      console.log("Si è verificato un errore generico", error);
+      alert(error);
+    }
+  };
 
 
 
@@ -159,7 +223,7 @@ const ADD  = async()=>{
 
   useEffect(() => {
     fetchData();
-
+    fetchComuni();
   }, []);
 
   const removeItem = async (id) => {
@@ -173,6 +237,26 @@ const ADD  = async()=>{
         const updatedArr = responseText.filter((item) => item.id !== id);
         setResponseText(updatedArr);
         console.log("Elemento rimosso con successo");
+      } else {
+        console.log("Si è verificato un errore nella richiesta");
+        alert("Qualcosa è andato storto");
+      }
+    } catch (error) {
+      console.log("Si è verificato un errore generico", error);
+      alert(error);
+    }
+  };
+
+  
+  const deleteFattura = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/fatture/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        const updatedArr = responseText.filter((item) => item.id !== id);
+        setResponseText(updatedArr);
       } else {
         console.log("Si è verificato un errore nella richiesta");
         alert("Qualcosa è andato storto");
@@ -499,69 +583,17 @@ handleShow();
         />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeLegale.comune.id" >ID Comune Sede Legale</label>
-        <input
-          type="text"
-          disabled
-        readOnly
-          className="form-control"
-          id="indirizzoSedeLegale.comune.id"
-          name="indirizzoSedeLegale.comune.id"
-          value={formState.indirizzoSedeLegale.comune.id}
-          onChange={handleChange}
-        />
-      </div>
+   
+          <div className="form-group">
+            <label htmlFor="indirizzoSedeLegale" >Comune e Provincia</label>
+          <Form.Select aria-label="Default select example" value={selectOption} onChange={handleSelect}>
+        <option selected>{formState.indirizzoSedeLegale.comune.nome+","+formState.indirizzoSedeLegale.comune.provincia?.sigla}</option>
+          {comuni?.map(c=>{
+       return  <option value={c.id} name="indirizzoSedeLegale.comune.id" >{c.nome+","+c.provincia?.sigla}</option>
+          })}
+       </Form.Select>
+          </div>
 
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeLegale.comune.nome">Nome Comune Sede Legale</label>
-        <input
-          type="text"
-          className="form-control"
-          id="indirizzoSedeLegale.comune.nome"
-          name="indirizzoSedeLegale.comune.nome"
-          value={formState.indirizzoSedeLegale.comune.nome}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeLegale.comune.provincia.id">ID Provincia Comune Sede Legale</label>
-        <input
-          type="text"
-          className="form-control"
-          id="indirizzoSedeLegale.comune.provincia.id"
-          disabled
-        readOnly
-          name="indirizzoSedeLegale.comune.provincia.id"
-          value={formState.indirizzoSedeLegale.comune.provincia ? formState.indirizzoSedeLegale.comune.provincia.id : null }
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeLegale.comune.provincia.sigla">Sigla Provincia Comune Sede Legale</label>
-        <input
-          type="text"
-          className="form-control"
-          id="indirizzoSedeLegale.comune.provincia.sigla"
-          name="indirizzoSedeLegale.comune.provincia.sigla"
-          value={formState.indirizzoSedeLegale.comune.provincia ? formState.indirizzoSedeLegale.comune.provincia.sigla : null }
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeLegale.comune.provincia.nome">Nome Provincia Comune Sede Legale</label>
-        <input
-          type="text"
-          className="form-control"
-          id="indirizzoSedeLegale.comune.provincia.nome"
-          name="indirizzoSedeLegale.comune.provincia.nome"
-          value={formState.indirizzoSedeLegale.comune.provincia ? formState.indirizzoSedeLegale.comune.provincia.nome : null }
-          onChange={handleChange}
-        />
-      </div>
 
       <div className="form-group">
         <label htmlFor="indirizzoSedeOperativa.via">Via Sede Operativa</label>
@@ -611,81 +643,33 @@ handleShow();
         />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeOperativa.comune.id">ID Comune Sede Operativa</label>
-        <input
-          type="text"
-          className="form-control"
-          disabled
-        readOnly
-          id="indirizzoSedeOperativa.comune.id"
-          name="indirizzoSedeOperativa.comune.id"
-          value={formState.indirizzoSedeOperativa.comune.id}
-          onChange={handleChange}
-        />
-      </div>
+          
+          <div className="form-group">
+            <label htmlFor="indirizzoSedeOperativa" >Comune e Provincia - Sede Operativa</label>
+          <Form.Select aria-label="Default select example" value={selectOption2} onChange={handleSelect2}>
+        <option selected>{formState.indirizzoSedeLegale.comune.nome+","+formState.indirizzoSedeLegale.comune.provincia?.sigla}</option>
+          {comuni?.map(c=>{
+       return  <option value={c.id} name="indirizzoSedeLegale.comune.id" >{c.nome+","+c.provincia?.sigla}</option>
+          })}
+       </Form.Select>
+          </div>
+
 
       <div className="form-group">
-        <label htmlFor="indirizzoSedeOperativa.comune.nome">Nome Comune Sede Operativa</label>
-        <input
-          type="text"
-          className="form-control"
-          id="indirizzoSedeOperativa.comune.nome"
-          name="indirizzoSedeOperativa.comune.nome"
-          value={formState.indirizzoSedeOperativa.comune.nome}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeOperativa.comune.provincia.id">ID Provincia Comune Sede Operativa</label>
-        <input
-          type="text"
-          className="form-control"
-          disabled
-        readOnly
-          id="indirizzoSedeOperativa.comune.provincia.id"
-          name="indirizzoSedeOperativa.comune.provincia.id"
-          value={formState.indirizzoSedeOperativa.comune.provincia ? formState.indirizzoSedeOperativa.comune.provincia.id : null }
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeOperativa.comune.provincia.sigla">Sigla Provincia Comune Sede Operativa</label>
-        <input
-          type="text"
-          className="form-control"
-          id="indirizzoSedeOperativa.comune.provincia.sigla"
-          name="indirizzoSedeOperativa.comune.provincia.sigla"
-          value={formState.indirizzoSedeOperativa.comune.provincia ? formState.indirizzoSedeOperativa.comune.provincia.sigla :null}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="indirizzoSedeOperativa.comune.provincia.nome">Nome Provincia Comune Sede Operativa</label>
-        <input
-          type="text"
-          className="form-control"
-          id="indirizzoSedeOperativa.comune.provincia.nome"
-          name="indirizzoSedeOperativa.comune.provincia.nome"
-          value={formState.indirizzoSedeOperativa.comune.provincia ? formState.indirizzoSedeOperativa.comune.provincia.nome :null }
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="listafatture">Lista Fatture</label>
+        <label htmlFor="listafatture">Numero di Fatture</label>
         <input
           type="text"
           className="form-control"
           id="listafatture"
           name="listafatture"
-          value={formState.listafatture}
+          value={formState.listafatture.length}
           onChange={handleChange}
         />
+         <Button variant="success" onClick={()=>handleShow2()}>
+        Launch demo modal
+        </Button>
       </div>
+      
 
      
     </form>
@@ -703,7 +687,44 @@ handleShow();
         </Modal.Footer>
       </Modal>
     </>
+
+
+<Modal show={show2} onHide={handleClose2} className='modal-lg'>
+        <Modal.Header closeButton>
+          <Modal.Title>Modal heading</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        
+          {formState?.listafatture.map(e=>{
+            return (
+              <ListGroup horizontal key={e.id} className='justify-content-center'>
+              <ListGroup.Item>{e.anno}</ListGroup.Item>
+              <ListGroup.Item>{e.importo}</ListGroup.Item>
+              <ListGroup.Item>{e.data}</ListGroup.Item>
+              <ListGroup.Item>{e.numero}</ListGroup.Item>
+              <ListGroup.Item>{e.statofattura}</ListGroup.Item>
+              <ListGroup.Item><Button>Modify</Button></ListGroup.Item>
+              <ListGroup.Item><Button variant='outline-danger' onClick={()=>deleteFattura(e.id)}>Delete</Button></ListGroup.Item>
+              </ListGroup> 
+              
+            )
+          
+          })}
+        
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose2}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={handleClose2}>
+            Save Changes 
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
     </>
+
+      
   );
 };
 
