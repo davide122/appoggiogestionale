@@ -255,8 +255,12 @@ const ADD  = async()=>{
       });
 
       if (response.ok) {
-        const updatedArr = responseText.filter((item) => item.id !== id);
-        setResponseText(updatedArr);
+        const updatedArr = formState.listafatture.filter((item) => item.id !== id);
+        console.log(updatedArr);
+        //setFormState(updatedArr);
+        setShow(false);
+        setShow2(false);
+        fetchData();
       } else {
         console.log("Si è verificato un errore nella richiesta");
         alert("Qualcosa è andato storto");
