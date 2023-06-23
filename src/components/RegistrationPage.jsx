@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import { Container, Row, Col} from "react-bootstrap";
 
 const RegistrationPage = () => {
   const [name, setName] = useState("");
